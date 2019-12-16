@@ -1,8 +1,19 @@
 pub fn part_1(start: u32, end: u32) -> usize {
+  find_password(start, end, adjacant_digits)
+}
+
+pub fn part_2(start: u32, end: u32) -> usize {
+  find_password(start, end, adjacant_digits_not_in_group)
+}
+
+pub fn find_password<F>(start: u32, end: u32, validator: F) -> usize
+where
+  F: Fn(&[u8; 6]) -> bool,
+{
   let mut number = make_increasing(to_array(start));
   let mut count = 0;
   while from_array(&number) <= end {
-    if adjacant_digits(&number) {
+    if validator(&number) {
       count += 1;
     }
     number = make_increasing(increase(number));
@@ -21,7 +32,7 @@ pub fn part_1(start: u32, end: u32) -> usize {
 /// assert_eq!( make_increasing( [ 1, 2, 3, 4, 5, 6 ] ), [ 1, 2, 3, 4, 5, 6 ] );
 /// assert_eq!( make_increasing( [ 1, 1, 2, 2, 3, 3 ] ), [ 1, 1, 2, 2, 3, 3 ] );
 /// ```
-pub fn make_increasing(mut number: [u8; 6]) -> [u8; 6] {
+pub fn make_increasing(number: [u8; 6]) -> [u8; 6] {
   (0..5).fold(number, |mut number, index| {
     if number[index] > number[index + 1] {
       number[index + 1] = number[index];
@@ -51,7 +62,7 @@ pub fn increase(mut number: [u8; 6]) -> [u8; 6] {
   number
 }
 
-/// Check for adjacant digits in the number
+/// # Check for adjacant digits in the number
 ///
 /// ## Example
 /// ```
@@ -66,6 +77,29 @@ pub fn increase(mut number: [u8; 6]) -> [u8; 6] {
 /// ```
 pub fn adjacant_digits(number: &[u8; 6]) -> bool {
   (0..5).any(|index| number[index] == number[index + 1])
+}
+
+/// # Check for adjacant digits, but make sure they are not part of a larger group
+///
+/// ## Example
+/// ```
+/// use day_4::adjacant_digits_not_in_group;
+///
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 2, 3, 4, 5, 6 ] ), false );
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 1, 3, 4, 5, 6 ] ), true );
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 1, 1, 4, 5, 6 ] ), false );
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 2, 2, 4, 5, 6 ] ), true );
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 2, 2, 2, 5, 6 ] ), false );
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 2, 3, 4, 5, 5 ] ), true );
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 2, 3, 5, 5, 5 ] ), false );
+/// assert_eq!( adjacant_digits_not_in_group( &[ 1, 1, 1, 2, 2, 5 ] ), true );
+/// ```
+pub fn adjacant_digits_not_in_group(number: &[u8; 6]) -> bool {
+  (0..5).any(|index| {
+    number[index] == number[index + 1]
+      && (index == 0 || number[index - 1] != number[index])
+      && (index == 4 || number[index + 2] != number[index])
+  })
 }
 
 /// # Convert an integer to an array of its digits
